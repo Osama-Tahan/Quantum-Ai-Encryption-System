@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+python-multipart
+qiskit
+qiskit-aer
+pycryptodome
+scikit-learn
+numpy
+reportlab
+joblib

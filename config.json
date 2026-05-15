@@ -1,0 +1,12 @@
+{
+    "app_title": "Data Encryption System Based on Quantum Computing",
+    "subtitle": "With AI Performance Enhancer",
+    "qubits": 512,
+    "qber_safe_threshold": 5.0,
+    "qber_warning_threshold": 10.0,
+    "aes_mode": "GCM",
+    "session_validity_minutes": 10,
+    "pbkdf2_iterations": 200000,
+    "qiskit_noise_error_rate": 0.035,
+    "eve_measurement_rate": 0.45
+}
