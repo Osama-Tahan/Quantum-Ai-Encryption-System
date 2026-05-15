@@ -278,3 +278,37 @@ def aud(u:User=Depends(current_user),db:Session=Depends(get_db)):
 @app.post('/api/report/pdf')
 def pdf(u:User=Depends(current_user),db:Session=Depends(get_db)):
     rid=str(uuid.uuid4()); path=REPORTS/f'academic_report_{rid}.pdf'; doc=SimpleDocTemplate(str(path),pagesize=A4); styles=getSampleStyleSheet(); title=ParagraphStyle('t',parent=styles['Title'],fontSize=18,textColor=colors.HexColor('#0F172A')); h=ParagraphStyle('h',parent=styles['Heading2'],textColor=colors.HexColor('#1D4ED8')); story=[Paragraph(APP_TITLE,title),Paragraph(APP_SUBTITLE,styles['Heading3']),Spacer(1,12),Paragraph('Cloud Architecture',h),Paragraph('FastAPI + PostgreSQL + Cloudflare R2 + JWT + AES-256-GCM + BB84 simulation + AI threat detection.',styles['BodyText'])]; doc.build(story); data=path.read_bytes(); key=f'reports/{u.id}/{path.name}'; STORE.put(key,data,'application/pdf'); rec=FileRecord(id=rid,owner_id=u.id,file_type='report',filename=path.name,storage_key=key,storage_backend='r2' if STORE.use_r2 else 'local',size=len(data),file_hash=sha(data),encryption_mode='PDF Report'); db.add(rec); audit(db,u,'EXPORT_PDF','SUCCESS','LOW'); db.commit(); path.unlink(missing_ok=True); return {'download_url':f'/api/download/{rec.id}','filename':rec.filename}
+@app.post("/api/admin/reset-default-users")
+def reset_default_users(db: Session = Depends(get_db)):
+    defaults = [
+        (DEFAULT_ADMIN_USERNAME, DEFAULT_ADMIN_PASSWORD, "Admin"),
+        (DEFAULT_ENCRYPTER_USERNAME, DEFAULT_ENCRYPTER_PASSWORD, "Encrypter"),
+        (DEFAULT_VIEWER_USERNAME, DEFAULT_VIEWER_PASSWORD, "Viewer"),
+    ]
+
+    for username, password, role in defaults:
+        user = db.query(User).filter(User.username == username).first()
+
+        if user:
+            user.password_hash = hash_password(password)
+            user.role = role
+            user.is_active = True
+        else:
+            db.add(User(
+                username=username,
+                password_hash=hash_password(password),
+                role=role,
+                is_active=True
+            ))
+
+    db.commit()
+
+    return {
+        "status": "ok",
+        "message": "Default users reset successfully.",
+        "users": [
+            {"username": "admin", "password": "admin123", "role": "Admin"},
+            {"username": "encrypter", "password": "encrypt123", "role": "Encrypter"},
+            {"username": "viewer", "password": "viewer123", "role": "Viewer"}
+        ]
+    }
