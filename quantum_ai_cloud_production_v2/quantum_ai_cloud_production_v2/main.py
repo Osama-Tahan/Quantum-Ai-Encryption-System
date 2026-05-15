@@ -65,7 +65,7 @@ def get_db():
     db=SessionLocal()
     try: yield db
     finally: db.close()
-pwd=CryptContext(schemes=['bcrypt'],deprecated='auto')
+pwd = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 def hash_password(p): return pwd.hash(p)
 def verify_password(p,h): return pwd.verify(p,h)
 def token_for(data):
